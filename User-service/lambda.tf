@@ -19,3 +19,22 @@ resource "aws_lambda_function" "user_register" {
   }
   timeout = 10
 }
+
+resource "aws_lambda_function" "login_user" {
+  function_name = "login-user-lambda"
+  role = aws_iam_role.lambda_exec.arn
+  handler = "index.handler"
+  runtime = "nodejs20.x"
+
+  filename = "${path.module}/login-user-lambda/login-user.zip"
+  source_code_hash = filebase64sha256("${path.module}/login-user-lambda/login-user.zip")
+
+  environment {
+    variables = {
+      USER_TABLE = aws_dynamodb_table.user_table.name
+      SECRET_ID = aws_secretsmanager_secret.auth_secrets.id
+      NOTIFICATION_QUEUE_URL = "https://sqs.us-east-1.amazonaws.com/683104418449/inferno-bank-dev-notification-email-sqs"
+    }
+  }
+  timeout = 10
+}
