@@ -97,3 +97,26 @@ resource "aws_lambda_permission" "apigw_upload_avatar" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
 }
+
+
+//Aca para el get Profile
+resource "aws_apigatewayv2_integration" "get_profile_integration" {
+  api_id = aws_apigatewayv2_api.http_api.id
+  integration_type = "AWS_PROXY"
+  integration_uri = aws_lambda_function.get_profile.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "get_profile_route" {
+  api_id = aws_apigatewayv2_api.http_api.id
+  route_key = "GET /profile/{user_id}"
+  target = "integrations/${aws_apigatewayv2_integration.get_profile_integration.id}"
+}
+
+resource "aws_lambda_permission" "apigw_invoke_get_profile" {
+  statement_id = "AllowAPIGatewayInvokeGetProfile"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.get_profile.function_name
+  principal = "apigateway.amazonaws.com"
+  source_arn = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+}

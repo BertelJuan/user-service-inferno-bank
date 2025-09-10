@@ -80,3 +80,24 @@ resource "aws_lambda_function" "upload_avatar" {
   depends_on = [ aws_s3_bucket.profile_images ]
   timeout = 10
 }
+
+
+
+resource "aws_lambda_function" "get_profile" {
+  function_name = "get-profile-user-lambda"
+  role = aws_iam_role.lambda_exec.arn
+  handler = "index.handler"
+  runtime = "nodejs20.x"
+
+  filename = "${path.module}/get-profile-user-lambda/get-profile.zip"
+  source_code_hash = filebase64sha256("${path.module}/get-profile-user-lambda/get-profile.zip")
+
+  environment {
+    variables = {
+      USER_TABLE = aws_dynamodb_table.user_table.name
+      IMAGE_BUCKET = aws_s3_bucket.profile_images.bucket
+      SECRET_ID = aws_secretsmanager_secret.auth_secrets.id
+    }
+  }
+  timeout = 10
+}

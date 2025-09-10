@@ -24,3 +24,10 @@ output "profile_images_bucket_url" {
   description = "URL base publica para acceder a las imagenes"
   value = "https://${aws_s3_bucket.profile_images.bucket}.s3.amazonaws.com"
 }
+
+
+
+output "get_profile_endpoint" {
+  description = "Endpoint to retrieve user profile by ID"
+  value = "${aws_apigatewayv2_api.http_api.api_endpoint}/${aws_apigatewayv2_stage.dev.name}/profile/{user_id}"
+}
