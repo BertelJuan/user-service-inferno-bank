@@ -54,3 +54,46 @@ resource "aws_lambda_permission" "apigw_invoke_login" {
   principal = "apigateway.amazonaws.com"
   source_arn = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
 }
+
+// Aca es la de update
+resource "aws_apigatewayv2_integration" "update_user_integration" {
+  api_id = aws_apigatewayv2_api.http_api.id
+  integration_type = "AWS_PROXY"
+  integration_uri = aws_lambda_function.update_user.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "update_user_route" {
+  api_id = aws_apigatewayv2_api.http_api.id
+  route_key = "PUT /profile/{user_id}"
+  target = "integrations/${aws_apigatewayv2_integration.update_user_integration.id}"
+}
+
+resource "aws_lambda_permission" "apigw_invoke_update-user" {
+  statement_id = "AllowAPIGatewayInvokeUpdateUser"
+  action = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.update_user.function_name
+  principal = "apigateway.amazonaws.com"
+  source_arn = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+}
+
+resource "aws_apigatewayv2_integration" "upload_avatar_integration" {
+  api_id                 = aws_apigatewayv2_api.http_api.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.upload_avatar.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "upload_avatar_route" {
+  api_id    = aws_apigatewayv2_api.http_api.id
+  route_key = "POST /profile/{user_id}/avatar"
+  target    = "integrations/${aws_apigatewayv2_integration.upload_avatar_integration.id}"
+}
+
+resource "aws_lambda_permission" "apigw_upload_avatar" {
+  statement_id  = "AllowAPIGatewayInvokeUploadAvatar"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.upload_avatar.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.http_api.execution_arn}/*/*"
+}

@@ -73,3 +73,54 @@ resource "aws_iam_role_policy" "lambda_sqs_access" {
     ]
   })
 }
+
+data "aws_caller_identity" "current" {}
+resource "aws_s3_bucket" "profile_images" {
+  bucket = "profile-images-${var.env}-${data.aws_caller_identity.current.account_id}"
+}
+
+resource "aws_s3_bucket_public_access_block" "public_access" {
+  bucket = aws_s3_bucket.profile_images.id
+  block_public_acls = false
+  block_public_policy = false
+  ignore_public_acls = false
+  restrict_public_buckets = false
+}
+
+resource "aws_s3_bucket_policy" "allow_public_read" {
+  bucket = aws_s3_bucket.profile_images.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = "*"
+      Action = ["s3:GetObject"]
+      Resource = "${aws_s3_bucket.profile_images.arn}/*"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_s3_access" {
+  role = aws_iam_role.lambda_exec.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy" "lambda_secretsmanager_access" {
+  name = "lambda-secretsmanager-access"
+  role = aws_iam_role.lambda_exec.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = [
+          aws_secretsmanager_secret.auth_secrets.arn
+        ]
+      }
+    ]
+  })
+}
